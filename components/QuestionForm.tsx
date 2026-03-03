@@ -1,13 +1,12 @@
 import {ForwardedRef, forwardRef, useEffect, useState} from "react";
-import {Button, Card, Checkbox, FormGroup, Icon, InputGroup, MenuItem, Spinner, TextArea} from "@blueprintjs/core";
+import {Button, Checkbox, FormGroup, Icon, InputGroup, MenuItem, Spinner} from "@blueprintjs/core";
 import {Select} from "@blueprintjs/select";
 import {SuccessBlock} from "@/lib/cms/success-block";
 import {ErrorBlock} from "@/lib/cms/error-block";
 import {useRouter} from "next/router";
 import {conversationStageOptions} from "@/lib/conversationStages";
 import {Question, Tenant} from "@/lib/types";
-import {TopicCheckboxes} from "@/components/TopicCheckboxes";
-import {questionTypes} from "@/lib/questionTypes";
+import {QuestionType, questionTypes} from "@/lib/questionTypes";
 
 interface QuestionFormOption {
     id: number | null;
@@ -43,20 +42,17 @@ export const QuestionForm = forwardRef(
             tenantId: tenant.id,
             name: '',
             text: '',
-            typeId: null,
+            type: null,
             includeInHandover: false,
             options: [{...emptyOption}],
-            topics: [],
             conversationStage: 'start',
-            responseText: '',
         }
-        // Be sure to remove ref if it has come from an existing question, as we never want this to be edited via the UI
-        if ('ref' in initialState) {
-            delete initialState.ref
+        // Be sure to remove internalRef if it has come from an existing question, as we never want this to be edited via the UI
+        if ('internalRef' in initialState) {
+            delete initialState.internalRef
         }
 
         const [question, setQuestion] = useState(initialState)
-        const [topics, setTopics] = useState<string[]>([])
 
         const router = useRouter()
 
@@ -73,7 +69,7 @@ export const QuestionForm = forwardRef(
                 const newInput = document.querySelector(`input[name="option-${question.options.length - 1}"]`) as HTMLInputElement | null
                 newInput?.focus()
             }
-        }, [question.options.length, question.typeId]);
+        }, [question.options.length, question.type]);
 
         const save = (e) => {
             e.preventDefault()
@@ -82,7 +78,6 @@ export const QuestionForm = forwardRef(
             const data = {
                 ...question,
                 tenantId: tenant.id,
-                topics,
             }
 
             fetch(`/api/upsert-question`, {
@@ -96,7 +91,8 @@ export const QuestionForm = forwardRef(
                     if (!errors.length) {
                         setTimeout(() => {
                             // Return to questions list
-                            router.push(`/tenants/${tenant.id}/questions`)
+                            router.push(`/tenants/${tenant.slug}/questions`)
+
                         }, 1000)
                     }
                 })
@@ -106,7 +102,7 @@ export const QuestionForm = forwardRef(
                 });
         }
 
-        const choiceTypeIds = questionTypes.filter(t => ['Single Choice', 'Multiple Choice'].includes(t.name)).map(t => t.id)
+        const choiceTypeSlugs: QuestionType[] = ['singleChoice', 'multipleChoice']
 
         return loading ? <Spinner/>
             : successMessage.length ? <SuccessBlock successMessage={successMessage}/>
@@ -183,13 +179,6 @@ export const QuestionForm = forwardRef(
                                         text={question.conversationStage ? conversationStageOptions.find(t => t.value === question.conversationStage).name : "Choose a stage"}
                                         endIcon={<Icon icon="caret-down"/>}/></Select>
                                 </FormGroup>
-
-                                {question.conversationStage === 'after_topic' && (
-                                    <Card>
-                                        <TopicCheckboxes value={question.topics} name="afterTopics"
-                                                         onChange={setTopics}/>
-                                    </Card>
-                                )}
                             </div>
 
                             <div className={`max-w-xs`}>
@@ -203,24 +192,24 @@ export const QuestionForm = forwardRef(
                                         itemRenderer={(type, {handleClick}) => (
                                             <MenuItem
                                                 text={type.name}
-                                                key={type.id}
+                                                key={type.slug}
                                                 onClick={handleClick}
                                                 label={type.description}
 
                                             />
                                         )}
                                         onItemSelect={(type) => {
-                                            setQuestion({...question, typeId: type.id})
+                                            setQuestion({...question, type: type.slug})
                                         }}
                                         filterable={false}
                                     >
                                         <Button
-                                            text={question.typeId ? questionTypes.find(t => t.id === question.typeId).name : "Choose a type"}
+                                            text={question.type ? questionTypes.find(t => t.slug === question.type).name : "Choose a type"}
                                             endIcon={<Icon icon="caret-down"/>}/>
                                     </Select>
                                 </FormGroup>
 
-                                {choiceTypeIds.includes(question.typeId) &&
+                                {choiceTypeSlugs.includes(question.type) &&
                                     <div className="my-4 mx-8">
                                         {question.options.map((option, index) => (
 
@@ -247,9 +236,9 @@ export const QuestionForm = forwardRef(
                                                         intent="danger"
                                                         icon="delete"
                                                         title="Delete option"
-                                                        small
+                                                        size="small"
                                                         className="mx-4"
-                                                        minimal
+                                                        variant="minimal"
                                                         onClick={() => {
                                                             setQuestion({
                                                                 ...question,
@@ -271,24 +260,10 @@ export const QuestionForm = forwardRef(
                                             text="Add Option"
                                             icon="plus"
                                             intent="primary"
-                                            small={true}
+                                            size="small"
                                         />
                                     </div>
                                 }
-
-                                <FormGroup
-                                    label="Response"
-                                    subLabel="An optional short message to display to the user after they provide an answer"
-                                >
-                                    <TextArea
-                                        name="responseText"
-                                        disabled={loading}
-                                        defaultValue={question.responseText}
-                                        onChange={(event) => {
-                                            setQuestion({...question, responseText: event.target.value})
-                                        }}
-                                    />
-                                </FormGroup>
 
                             </div>
                         </div>

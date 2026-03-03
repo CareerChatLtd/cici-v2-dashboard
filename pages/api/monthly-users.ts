@@ -1,6 +1,6 @@
 import {addMonth, validateMonthString} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 import {getFilteredUsersCte} from "@/lib/userFilterQueries";
 
 type Row = { month: string, tenantId: string, newUsers: number, existingUsers: number, totalUsers: number }
@@ -37,11 +37,11 @@ export default withTenantCheck(async (req, res) => {
                    COUNT(DISTINCT CASE
                                       WHEN fu.created_at < c."monthStart"
                                           THEN fu.id END)::INT       AS "existingUsers"
-            FROM calendar_month AS c
-                     LEFT JOIN msg_messages_relevant AS m
-                               ON m."sentOn" >= c."monthStart"
-                               AND m."sentOn" < (c."monthStart"::DATE + INTERVAL '1 month')
-                     LEFT JOIN filtered_users AS fu ON fu.id = m."authorId"
+            FROM "calendarMonth" AS c
+                     LEFT JOIN message AS m
+                               ON m."createdAt" >= c."monthStart"
+                               AND m."createdAt" < (c."monthStart"::DATE + INTERVAL '1 month')
+                     LEFT JOIN filtered_users AS fu ON fu.id = m."userId"
             WHERE c."monthStart" >= $1
               AND c."monthStart" < $2
             GROUP BY c."monthStart"

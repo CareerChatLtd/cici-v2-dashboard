@@ -4,27 +4,27 @@ import {getDeepQuery} from "@/lib/apiUtils";
 
 const singleChoiceUserSelection = (userId: string, questionId: number, optionId: number) => {
     return `SELECT 1
-            FROM cici.user_responses AS ur
+            FROM answer AS ur
             WHERE ur."questionId" = ${questionId}
-              AND ur."selectedOptionId" = ${optionId}
-              AND ur."userId"::uuid = ${userId}`
+              AND ur."questionOptionId" = ${optionId}
+              AND ur."userId" = ${userId}`
 }
 
 const multipleChoiceUserSelection = (userId: string, questionId: number, optionId: number) => {
     return `SELECT 1
-            FROM cici.user_responses AS ur
-                     join cici.user_response_options AS uro on uro."responseId" = ur.id
+            FROM answer AS ur
+                     join "answerOption" AS uro on uro."answerId" = ur.id
             WHERE ur."questionId" = ${questionId}
-              AND uro."optionId" = ${optionId}
-              AND ur."userId"::uuid = ${userId}`
+              AND uro."questionOptionId" = ${optionId}
+              AND ur."userId" = ${userId}`
 }
 
 const yesNoUserSelection = (userId: string, questionId: number, booleanValue: boolean) => {
     return `SELECT 1
-            FROM cici.user_responses AS ur
+            FROM answer AS ur
             WHERE ur."questionId" = ${questionId}
-              AND ur."responseBoolean" = ${booleanValue ? 'true' : 'false'}
-              AND ur."userId"::uuid = ${userId}`
+              AND ur."booleanValue" = ${booleanValue ? 'true' : 'false'}
+              AND ur."userId" = ${userId}`
 }
 
 type UserInputValue = string | ParsedQs | (string | ParsedQs)[] | undefined
@@ -79,27 +79,19 @@ const buildCustomQuestionsUserFilter = (
  * A reusable CTE that returns a list of user IDs that match known attributes passed in the request.
  * Returns rows with column "id".
  */
-export const getFilteredUsersCte = (
-    req: NextApiRequest,
-    useForeignSchema = false
-) => {
+export const getFilteredUsersCte = (req: NextApiRequest) => {
 
-    const {tenantId: rawTenantId, minAge: rawMinAge, maxAge: rawMaxAge, questions} = getDeepQuery(req)
+    const {tenantId: rawTenantId, questions} = getDeepQuery(req)
 
-    // rawTenantId is a potentially-user-supplied string, so we should remove anything that isn't alphanumeric
-    const tenantId = String(rawTenantId).replace(/[^a-zA-Z0-9]/g, '')
-
-    const minAge = rawMinAge ? parseInt(String(rawMinAge)) : 0
-    const maxAge = rawMaxAge ? parseInt(String(rawMaxAge)) : 999
-
-    if (isNaN(minAge) || isNaN(maxAge)) {
-        throw new Error('Invalid age parameters')
+    // rawTenantId is a potentially-user-supplied value, so we validate it as a number
+    const tenantId = Number(rawTenantId)
+    if (isNaN(tenantId)) {
+        throw new Error('tenantId must be a number')
     }
 
-    return `SELECT u.user_id::uuid AS id, u.created_at, u.updated_at, u.attributes, u.age
-            FROM public.srv_channel_users AS u
-            WHERE u."tenantId" = '${tenantId}'
-              AND COALESCE(u.age:: smallint, 0) BETWEEN ${minAge} AND ${maxAge}
-              AND ${buildCustomQuestionsUserFilter(`u.user_id::uuid`, questions)}
+    return `SELECT u."id", u."createdAt" AS created_at
+            FROM "user" AS u
+            WHERE u."tenantId" = ${tenantId}
+              AND ${buildCustomQuestionsUserFilter(`u."id"`, questions)}
     `
 }

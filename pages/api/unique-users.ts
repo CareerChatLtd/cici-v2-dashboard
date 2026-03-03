@@ -1,7 +1,7 @@
 import {addDayToDateString, validateDateRangeStrings} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
 import {getFilteredUsersCte} from "@/lib/userFilterQueries";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 
 export default withTenantCheck(async (req, res) => {
 
@@ -27,12 +27,12 @@ export default withTenantCheck(async (req, res) => {
                    count(DISTINCT CASE
                                       WHEN fu.created_at < $1
                                           THEN fu.id END)::INT as "existingUsers"
-            FROM msg_messages_relevant as m
+            FROM message as m
                      JOIN filtered_users AS fu
-                          ON fu.id = m."authorId"
-            WHERE m."authorId" IS NOT NULL
-              AND m."sentOn" >= $1
-              AND m."sentOn" < $2
+                          ON fu.id = m."userId"
+            WHERE m."userId" IS NOT NULL
+              AND m."createdAt" >= $1
+              AND m."createdAt" < $2
             ;
         `
 

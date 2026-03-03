@@ -1,6 +1,6 @@
 import {addDayToDateString, validateDateRangeStrings} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 import {getFilteredUsersCte} from "@/lib/userFilterQueries";
 
 export default withTenantCheck(async (req, res) => {
@@ -20,20 +20,20 @@ export default withTenantCheck(async (req, res) => {
 
         const sql = `
             WITH filtered_users(id, created_at) AS MATERIALIZED (${getFilteredUsersCte(req)}),
-                 daily_active AS (SELECT m."sentOn"::date    AS date,
-                                         m."authorId"        AS user_id,
+                 daily_active AS (SELECT m."createdAt"::date AS date,
+                                         m."userId"          AS user_id,
                                          DATE(fu.created_at) AS created_date
-                                  FROM msg_messages_relevant AS m
-                                           JOIN filtered_users AS fu ON fu.id = m."authorId"
-                                  WHERE m."sentOn" >= $1
-                                    AND m."sentOn" < $2
+                                  FROM message AS m
+                                           JOIN filtered_users AS fu ON fu.id = m."userId"
+                                  WHERE m."createdAt" >= $1
+                                    AND m."createdAt" < $2
                                   GROUP BY 1, 2, 3 -- de-dupe by (date,user), third column to keep postgresql happy
                  )
             SELECT c.date,
                    COALESCE(COUNT(d.user_id), 0)::int                     AS "totalUsers",
                    COALESCE(SUM((d.created_date = c.date)::int), 0)::int  AS "newUsers",
                    COALESCE(SUM((d.created_date <> c.date)::int), 0)::int AS "existingUsers"
-            FROM calendar_day c
+            FROM "calendarDay" c
                      LEFT JOIN daily_active d
                                ON d.date = c.date
             WHERE c.date BETWEEN $1 AND $3

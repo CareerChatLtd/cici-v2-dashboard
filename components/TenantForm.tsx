@@ -1,56 +1,54 @@
 import {Button, Card, Checkbox, FormGroup, Icon, InputGroup, Label, TextArea} from "@blueprintjs/core";
 import React, {useRef, useState} from "react";
 import {toLowerCamelCase} from "@/lib/stringUtils";
-import {getShortLinkForShortId} from "@/lib/shortLinks";
+import {getBotShortUrl} from "@/lib/shortLinks";
 import {useRouter} from "next/router";
-import {TopicCheckboxes} from "@/components/TopicCheckboxes";
-import {Question, Tenant} from "@/lib/types";
+import {Tenant} from "@/lib/types";
 import Link from "next/link";
 
 interface TenantFormProps {
     tenant: Partial<Tenant>;
-    questions: Question[];
 }
 
-export const TenantForm = ({tenant, questions}: TenantFormProps) => {
+export const TenantForm = ({tenant}: TenantFormProps) => {
 
-    const idRef = useRef<HTMLInputElement>(null)
-    const [idManuallySet, setIdManuallySet] = useState(false)
+    const slugRef = useRef<HTMLInputElement>(null)
+    const [slugManuallySet, setSlugManuallySet] = useState(false)
 
-    const [shortId, setShortId] = useState(tenant.shortId)
+    const [shortSlug, setShortSlug] = useState(tenant.shortSlug)
 
     const router = useRouter()
 
     const nameChangeHandler = (v: React.ChangeEvent<HTMLInputElement>) => {
-        if (idRef.current && !tenant.id && !idManuallySet) {
-            // If we're on the 'add' screen, and the ID hasn't been set manually
+        if (slugRef.current && !tenant.slug && !slugManuallySet) {
+            // If we're on the 'add' screen, and the slug hasn't been set manually
             // by the user, then auto-generate one based on the org name
             const alphaOnly = v.target.value.replaceAll(/[^a-z0-9 ]/gi, '')
-            idRef.current.value = toLowerCamelCase(alphaOnly)
+            slugRef.current.value = toLowerCamelCase(alphaOnly)
         }
     }
 
-    const idChangeHandler = (v: React.KeyboardEvent<HTMLInputElement>) => {
-        setIdManuallySet(v.currentTarget.value.trim() !== '')
+    const slugChangeHandler = (v: React.KeyboardEvent<HTMLInputElement>) => {
+        setSlugManuallySet(v.currentTarget.value.trim() !== '')
     }
 
-    const shortIdChangeHandler = (v: React.KeyboardEvent<HTMLInputElement>) => {
+    const shortSlugChangeHandler = (v: React.KeyboardEvent<HTMLInputElement>) => {
         const trimmed = v.currentTarget.value.trim()
-        setShortId(trimmed.length ? trimmed : null)
+        setShortSlug(trimmed.length ? trimmed : null)
     }
 
-    const shortIdUrl = getShortLinkForShortId(shortId)
+    const shortSlugUrl = getBotShortUrl(shortSlug)
     const CopyButton = () => <button type='button' className='-mt-1 hover:text-blue-900' title='Copy URL'
                                      onClick={async () => {
-                                         await navigator.clipboard.writeText(shortIdUrl);
+                                         await navigator.clipboard.writeText(shortSlugUrl);
                                          alert('URL copied to clipboard')
                                      }}><Icon icon="duplicate" size={12} className="!ml-2"/></button>
-    const shortIdHelperText = shortId ? <div className='flex items-center ml-3 text-xs'>
-        <a className='' href={shortIdUrl} target="_blank">{shortIdUrl}</a>
+    const shortSlugHelperText = shortSlug ? <div className='flex items-center ml-3 text-xs'>
+        <a className='' href={shortSlugUrl} target="_blank">{shortSlugUrl}</a>
         <CopyButton/>
-    </div> : `Very short ID that will be used on printed materials, e.g. "gwr" or "7263"`
+    </div> : `Very short slug that will be used on printed materials, e.g. "gwr" or "7263"`
 
-    const shortIdHasChanged = tenant.shortId && shortId !== tenant.shortId;
+    const shortSlugHasChanged = tenant.shortSlug && shortSlug !== tenant.shortSlug;
 
     return (<div className="w-full flex flex-row flex-wrap gap-6">
         <div className="w-[18rem]">
@@ -77,33 +75,33 @@ export const TenantForm = ({tenant, questions}: TenantFormProps) => {
 
             <Card className="mt-5">
                 <h2 className="font-bold text-16 mb-4">Chatbot settings</h2>
-                {!tenant.id && <FormGroup
-                    label="ID"
+                {!tenant.slug && <FormGroup
+                    label="Slug"
                     labelInfo="(required)"
                     helperText="No spaces, lowerCamelCase"
                 >
                     <InputGroup
-                        inputRef={idRef}
-                        name="id"
+                        inputRef={slugRef}
+                        name="slug"
                         required={true}
-                        defaultValue={tenant.id}
+                        defaultValue={tenant.slug}
                         style={{width: '15em'}}
-                        onKeyUp={idChangeHandler}
+                        onKeyUp={slugChangeHandler}
                     />
                 </FormGroup>}
 
                 <FormGroup
-                    label="Short ID"
-                    helperText={shortIdHelperText}
-                    subLabel={shortIdHasChanged ? 'Are you sure the previous URL is not still in use?' : null}
-                    intent={shortIdHasChanged ? 'warning' : null}
+                    label="Short Slug"
+                    helperText={shortSlugHelperText}
+                    subLabel={shortSlugHasChanged ? 'Are you sure the previous URL is not still in use?' : null}
+                    intent={shortSlugHasChanged ? 'warning' : null}
                 >
                     <InputGroup
-                        intent={shortIdHasChanged ? 'warning' : null}
-                        name="shortId"
-                        defaultValue={tenant.shortId}
+                        intent={shortSlugHasChanged ? 'warning' : null}
+                        name="shortSlug"
+                        defaultValue={tenant.shortSlug}
                         style={{width: '10em'}}
-                        onKeyUp={shortIdChangeHandler}
+                        onKeyUp={shortSlugChangeHandler}
                     />
                 </FormGroup>
 
@@ -118,18 +116,6 @@ export const TenantForm = ({tenant, questions}: TenantFormProps) => {
                     />
                 </FormGroup>
 
-                <FormGroup
-                    label="Disclaimer"
-                    helperText="Supports Markdown"
-                >
-                    <TextArea
-                        name="disclaimer"
-                        className="min-w-full"
-                        defaultValue={tenant.disclaimer}
-                        rows={4}
-                    />
-                </FormGroup>
-
                 <Label>Alternative introduction
                     <InputGroup
                         name="intro"
@@ -137,41 +123,17 @@ export const TenantForm = ({tenant, questions}: TenantFormProps) => {
                         placeholder="e.g. Hi, I'm CiCi..."
                     />
                 </Label>
-
-
-                <FormGroup
-                    label="Apprenticeship UKPRN"
-                    helperText="8 digits, starting with the number 1"
-                >
-                    <InputGroup
-                        name="apprenticeshipUkprn"
-                        defaultValue={tenant.apprenticeshipUkprn}
-                        style={{width: '9em'}}
-                    />
-                </FormGroup>
             </Card>
 
         </div>
 
         <div className="w-[18rem]">
 
-            <Card>
-                <h2 className="font-bold text-16 mb-4">Built-in Questions</h2>
-                {questions.map((question) => (<Checkbox
-                    className="ml-1 text-xs"
-                    name="questions"
-                    value={question.id.toString()}
-                    key={question.id}
-                    defaultChecked={tenant.questions?.includes(question.id.toString())}
-                    label={question.name}
-                />))}
-            </Card>
-
-            <Card className='mt-5 flex justify-start'>
+            <Card className='flex justify-start'>
                 <Button
                     icon="wrench"
                     text="Custom Questions"
-                    onClick={() => router.push(`/tenants/${tenant.id}/questions`)}
+                    onClick={() => router.push(`/tenants/${tenant.slug}/questions`)}
                 />
             </Card>
 
@@ -189,11 +151,6 @@ export const TenantForm = ({tenant, questions}: TenantFormProps) => {
                     <p className="text-gray-600 text-xs mb-3">We will always ask the user for their email address, but
                         in addition...</p>
 
-                    <Checkbox
-                        name="handoverAskForFullName"
-                        defaultChecked={tenant.handoverAskForFullName}
-                        label={"Ask for full name?"}
-                    />
                     <Checkbox
                         name="handoverAskForPhoneNumber"
                         defaultChecked={tenant.handoverAskForPhoneNumber}
@@ -254,15 +211,6 @@ export const TenantForm = ({tenant, questions}: TenantFormProps) => {
                         See default responses
                     </Link>
                 </div>
-            </Card>
-
-        </div>
-
-        <div className="w-[18rem]">
-
-            <Card>
-                <h2 className="font-bold text-16 mb-4">Topics to hide</h2>
-                <TopicCheckboxes value={tenant.hideTopics ?? []} name="hideTopics"/>
             </Card>
 
         </div>

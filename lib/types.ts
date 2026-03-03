@@ -1,44 +1,42 @@
-import {QuestionTypeId} from "@/lib/questionTypes";
+import {QuestionType} from "@/lib/questionTypes";
 
 export interface Tenant {
-    id: string;
+    id: number;
+    slug: string;
+    shortSlug: string;
     name: string;
-    shortId: string;
     intro: string;
-    questions: string[];
     status: 'active' | 'inactive' | 'archived';
     website: string;
-    apprenticeshipUkprn: string;
-    hideTopics: string[];
     handoverEmail: string;
-    handoverAskForFullName: boolean;
     handoverAskForPhoneNumber: boolean;
     handoverAskForStudentNumber: boolean;
     handoverSuccessMessage: string;
     passcode: string;
-    disclaimer: string | null;
     safeguardingMessageLow: string | null;
     safeguardingMessageHigh: string | null;
+    userSituation: 'school' | 'college' | 'university' | 'working' | 'lookingForWork' | 'other' | null;
     usersAreUnder18: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface Question {
     id: number;
-    ref: string | null;
-    tenantId: string;
+    internalRef: string | null;
+    tenantId: number;
     name: string;
     text: string;
-    typeId: QuestionTypeId;
+    type: QuestionType;
     includeInHandover: boolean;
-    conversationStage: 'start' | 'handover' | 'after_topic';
+    conversationStage: 'start' | 'handover';
     options: Array<QuestionOption>;
-    topics: Array<string>
-    responseText: string | null;
 }
 
 export interface QuestionOption {
     id: number;
-    questionId: number;
+    questionId?: number;
     text: string;
+    internalRef?: string | null;
 }
 

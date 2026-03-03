@@ -1,7 +1,7 @@
 import {addMonth, validateMonthString} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
 import {getFilteredUsersCte} from "@/lib/userFilterQueries";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 
 
 export default withTenantCheck(async (req, res) => {
@@ -26,16 +26,16 @@ export default withTenantCheck(async (req, res) => {
 
     const sql = `
         WITH filtered_users AS MATERIALIZED (${getFilteredUsersCte(req)}),
-             mm AS (SELECT date_trunc('month', m."sentOn")::date AS "monthStart",
-                           COUNT(*)::int                         AS ct
-                    FROM msg_messages_relevant m
-                             JOIN filtered_users fu ON fu.id = m."authorId"
-                    WHERE m."sentOn" >= $1
-                      AND m."sentOn" < $2
+             mm AS (SELECT date_trunc('month', m."createdAt")::date AS "monthStart",
+                           COUNT(*)::int                            AS ct
+                    FROM message m
+                             JOIN filtered_users fu ON fu.id = m."userId"
+                    WHERE m."createdAt" >= $1
+                      AND m."createdAt" < $2
                     GROUP BY 1)
         SELECT TO_CHAR(c."monthStart", 'YYYY-MM') AS month,
                COALESCE(mm.ct, 0)                 AS "totalMessages"
-        FROM calendar_month c
+        FROM "calendarMonth" c
                  LEFT JOIN mm ON mm."monthStart" = c."monthStart"
         WHERE c."monthStart" >= $1
           AND c."monthStart" <= $2

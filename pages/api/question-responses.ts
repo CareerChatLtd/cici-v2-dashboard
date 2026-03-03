@@ -1,5 +1,5 @@
 import {db} from "@/lib/database";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 import {addDayToDateString, validateDateRangeStrings} from "@/lib/dateUtils";
 import {getFilteredUsersCte} from "@/lib/userFilterQueries";
 
@@ -17,22 +17,22 @@ export default withTenantCheck(async (req, res) => {
     const adjustedEnd = addDayToDateString(end)
 
     const sql = `
-        WITH filtered_users(id) AS MATERIALIZED (${getFilteredUsersCte(req, true)})
-        SELECT ur.id,
-               "responseBoolean",
-               "responseText",
+        WITH filtered_users(id) AS MATERIALIZED (${getFilteredUsersCte(req)})
+        SELECT a.id,
+               "booleanValue",
+               "textValue",
                qo.text AS "selectedOptionText",
-               ur."respondedAt"
-        FROM user_responses AS ur
+               a."respondedAt"
+        FROM answer AS a
                  JOIN filtered_users AS fu
-                      ON ur."userId"::uuid = fu.id
-                 LEFT JOIN user_response_options AS uro ON ur.id = uro."responseId"
-                 LEFT JOIN question_options AS qo
-                           ON (ur."selectedOptionId" = qo."id" OR uro."optionId" = qo."id")
-        WHERE ur."questionId" = $1
-          AND ur."respondedAt" >= $2
-          AND ur."respondedAt" < $3
-        ORDER BY ur."respondedAt"`
+                      ON a."userId" = fu.id
+                 LEFT JOIN "answerOption" AS ao ON a.id = ao."answerId"
+                 LEFT JOIN "questionOption" AS qo
+                           ON (a."questionOptionId" = qo."id" OR ao."questionOptionId" = qo."id")
+        WHERE a."questionId" = $1
+          AND a."respondedAt" >= $2
+          AND a."respondedAt" < $3
+        ORDER BY a."respondedAt"`
 
     const result = await db.query(sql, [questionId, start, adjustedEnd])
     const data = result.rows

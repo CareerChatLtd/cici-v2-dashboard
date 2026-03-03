@@ -1,0 +1,15 @@
+import {db} from "@/lib/database";
+import {NextApiRequest, NextApiResponse} from "next";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+    const {tenantId = 'XXX'} = req.query
+
+    const sql = `SELECT EXISTS(SELECT 1
+                               FROM tenant
+                               WHERE slug = $1) AS "valid"`
+
+    const [{valid}] = (await db.query(sql, [tenantId])).rows;
+
+    return res.status(200).json({valid});
+}

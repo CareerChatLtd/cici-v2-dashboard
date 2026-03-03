@@ -1,6 +1,4 @@
-import {NextApiHandler, NextApiRequest, NextApiResponse} from 'next';
-import {assertUserCanAccessTenant, assertUserIsAdmin, isMultiTenantUser, isUserAdmin} from './auth0';
-import {withApiAuthRequired} from "@auth0/nextjs-auth0";
+import {isMultiTenantUser, isUserAdmin} from './auth0';
 import {FC, useEffect, useState} from "react";
 import {UserProfile, useUser, withPageAuthRequired} from "@auth0/nextjs-auth0/client";
 import Custom403 from "../pages/403";
@@ -8,66 +6,6 @@ import {useRouter} from "next/router";
 import Custom500 from "../pages/500";
 import Custom401 from "../pages/401";
 import Loading from "../pages/Loading";
-
-/**
- * Wrap an API Route to check that the user has access to this tenant's data.
- * If they're not logged in the handler will return a 401 Unauthorized.
- * If they don't have access to this tenant, then the handler will return a 403 Forbidden.
- *
- * ```js
- * // pages/api/protected-route.js
- * import { withTenantCheck } from 'lib/auth';
- *
- * export default withTenantCheck(function ProtectedRoute(req, res) {
- *   ...
- * });
- * ```
- *
- * If you visit `/api/protected-route` without a valid session cookie, you will get a 401 response.
- *
- * @category Server
- */
-export const withTenantCheck = (apiRoute: NextApiHandler) => withApiAuthRequired(async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
-
-    const {tenantId = null} = req.query
-
-    try {
-        await assertUserCanAccessTenant(tenantId, req, res)
-    } catch (err) {
-        console.log(err.stack)
-        return res.status(403).json({errors: [err.message]})
-    }
-
-    return apiRoute(req, res)
-})
-
-/**
- * Wrap an API Route to check that the user is an admin.
- * If they're not logged in the handler will return a 401 Unauthorized.
- * If they're not an admin, then the handler will return a 403 Forbidden.
- *
- * ```js
- * // pages/api/admin-route.js
- * import { withAdminCheck } from 'lib/auth';
- *
- * export default withAdminCheck(async (req, res) => {
- *   ...
- * });
- * ```
- *
- * @category Server
- */
-export const withAdminCheck = (apiRoute: NextApiHandler) => withApiAuthRequired(async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
-
-    try {
-        await assertUserIsAdmin(req, res)
-    } catch (err) {
-        console.log(err.stack)
-        return res.status(403).json({error: err.message})
-    }
-
-    return apiRoute(req, res)
-})
 
 /**
  * Wrap a Next.js page to ensure that the user is an admin user.
@@ -134,7 +72,7 @@ export const withTenant = (Component, fromUrl = false) => withPageAuthRequired((
                 .then(({error, data}) => {
                     if (!error) {
                         setTenant(data)
-                        // Always sync localStorage with successful tenant load
+                        // Always sync localStorage with slug for tenant resolution
                         localStorage.setItem('tenantId', data.id)
                     } else {
                         if (!fromUrl) {

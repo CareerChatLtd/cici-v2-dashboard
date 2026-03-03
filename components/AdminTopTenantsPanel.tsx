@@ -7,7 +7,7 @@ interface Props {
 }
 
 interface TenantData {
-    tenantId: string;
+    tenantSlug: string;
     tenantName: string;
     activeUsers: number;
 }
@@ -63,8 +63,8 @@ export const AdminTopTenantsPanel = ({dateRange}: Props) => {
                             </thead>
                             <tbody>
                             {data.map(tenant => (
-                                <tr key={tenant.tenantId} className="border-b border-gray-300 hover:bg-gray-50">
-                                    <td className="px-4 py-1 text-left">{tenant.tenantName || tenant.tenantId}</td>
+                                <tr key={tenant.tenantSlug} className="border-b border-gray-300 hover:bg-gray-50">
+                                    <td className="px-4 py-1 text-left">{tenant.tenantName || tenant.tenantSlug}</td>
                                     <td className="px-4 py-1 text-right">{tenant.activeUsers}</td>
                                 </tr>
                             ))}

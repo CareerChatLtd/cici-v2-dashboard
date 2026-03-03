@@ -1,6 +1,6 @@
 import {validateDateRangeStrings} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
-import {withAdminCheck} from "@/lib/auth";
+import {withAdminCheck} from "@/lib/auth-server";
 import {NextApiRequest, NextApiResponse} from "next";
 
 interface Row {
@@ -29,18 +29,18 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
     try {
         const sql = `
             SELECT c.date,
-                   COUNT(DISTINCT u.user_id)::INT AS "totalUsers",
+                   COUNT(DISTINCT u."id")::INT AS "totalUsers",
                    COUNT(DISTINCT CASE
-                                      WHEN u.created_at >= c.date
-                                          THEN u.user_id END)::INT AS "newUsers",
+                                      WHEN u."createdAt" >= c.date
+                                          THEN u."id" END)::INT AS "newUsers",
                    COUNT(DISTINCT CASE
-                                      WHEN u.created_at < c.date
-                                          THEN u.user_id END)::INT AS "existingUsers"
-            FROM calendar_day AS c
-                     LEFT JOIN msg_messages_relevant AS m
-                               ON m."sentOn" >= c.date
-                               AND m."sentOn" < c.date + INTERVAL '1 day'
-                     LEFT JOIN srv_channel_users AS u ON u.user_id::uuid = m."authorId"
+                                      WHEN u."createdAt" < c.date
+                                          THEN u."id" END)::INT AS "existingUsers"
+            FROM "calendarDay" AS c
+                     LEFT JOIN message AS m
+                               ON m."createdAt" >= c.date
+                               AND m."createdAt" < c.date + INTERVAL '1 day'
+                     LEFT JOIN "user" AS u ON u."id" = m."userId"
             WHERE c.date BETWEEN $1 AND $2
             GROUP BY c.date
             ORDER BY c.date;

@@ -1,6 +1,6 @@
 import {addMonth, validateMonthString} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
-import {withAdminCheck} from "@/lib/auth";
+import {withAdminCheck} from "@/lib/auth-server";
 import {NextApiRequest, NextApiResponse} from "next";
 
 interface Row {
@@ -17,18 +17,18 @@ interface Row {
 const getCounts = async (startDate: string, endDate: string): Promise<Row[]> => {
     const sql = `
         SELECT TO_CHAR(c."monthStart", 'YYYY-MM')                           AS month,
-               COUNT(DISTINCT u.user_id)::INT                               AS "totalUsers",
+               COUNT(DISTINCT u."id")::INT                                   AS "totalUsers",
                COUNT(DISTINCT CASE
-                                  WHEN u.created_at >= c."monthStart"
-                                      THEN u.user_id END)::INT              AS "newUsers",
+                                  WHEN u."createdAt" >= c."monthStart"
+                                      THEN u."id" END)::INT                  AS "newUsers",
                COUNT(DISTINCT CASE
-                                  WHEN u.created_at < c."monthStart"
-                                      THEN u.user_id END)::INT              AS "existingUsers"
-        FROM calendar_month AS c
-                 LEFT JOIN msg_messages_relevant AS m
-                           ON m."sentOn" >= c."monthStart"
-                               AND m."sentOn" < (c."monthStart"::DATE + INTERVAL '1 month')
-                 LEFT JOIN srv_channel_users AS u ON u.user_id::uuid = m."authorId"
+                                  WHEN u."createdAt" < c."monthStart"
+                                      THEN u."id" END)::INT                  AS "existingUsers"
+        FROM "calendarMonth" AS c
+                 LEFT JOIN message AS m
+                           ON m."createdAt" >= c."monthStart"
+                               AND m."createdAt" < (c."monthStart"::DATE + INTERVAL '1 month')
+                 LEFT JOIN "user" AS u ON u."id" = m."userId"
         WHERE c."monthStart" >= $1
           AND c."monthStart" < $2
         GROUP BY c."monthStart"

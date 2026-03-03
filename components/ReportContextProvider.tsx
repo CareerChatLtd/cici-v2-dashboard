@@ -1,6 +1,5 @@
 import React, {useState} from 'react'
 import {DateRange} from "@/lib/dateUtils";
-import {AgeBracket} from "@/lib/ages";
 import {DateTime} from "luxon";
 
 // By default, set our date range to the past month
@@ -14,12 +13,10 @@ type AnswerValue = Array<QuestionOptionId> | QuestionOptionId | true | false;
 export type CustomQuestions = Map<QuestionId, AnswerValue>;
 
 interface ReportContextInterface {
-    tenantId: string;
-    setTenantId: (id: string) => void;
+    tenantId: number;
+    setTenantId: (id: number) => void;
     dateRange: DateRange;
     setDateRange: (range: DateRange) => void;
-    ageBracket: AgeBracket;
-    setAgeBracket: (age: AgeBracket) => void;
     customQuestions: CustomQuestions;
     setCustomQuestion: (questionId: QuestionId, answer: AnswerValue | null) => void;
     filterCount: number;
@@ -28,11 +25,10 @@ interface ReportContextInterface {
 
 const ReportContext = React.createContext(null as ReportContextInterface | null);
 
-// A React context provider component that gives access to ageBracket, tenantId, and dateRange
+// A React context provider component that gives access to tenantId, and dateRange
 export const ReportContextProvider = ({children}) => {
-    const [tenantId, setTenantId] = useState<string>(null)
+    const [tenantId, setTenantId] = useState<number>(null)
     const [dateRange, setDateRange] = useState<DateRange>([defaultStart, defaultEnd])
-    const [ageBracket, setAgeBracket] = useState<AgeBracket>(null)
     const [customQuestions, setCustomQuestions] = useState<CustomQuestions>(new Map())
 
     const setCustomQuestion = (questionId: QuestionId, answer: AnswerValue | null) => {
@@ -46,14 +42,13 @@ export const ReportContextProvider = ({children}) => {
     }
 
     const clearFilters = () => {
-        setAgeBracket(null)
         setCustomQuestions(new Map())
     }
 
-    const filterCount = customQuestions.size + (ageBracket ? 1 : 0)
+    const filterCount = customQuestions.size
 
     return <ReportContext.Provider value={{
-        clearFilters, tenantId, setTenantId, dateRange, setDateRange, ageBracket, setAgeBracket,
+        clearFilters, tenantId, setTenantId, dateRange, setDateRange,
         customQuestions, setCustomQuestion, filterCount
     }}>
         {children}

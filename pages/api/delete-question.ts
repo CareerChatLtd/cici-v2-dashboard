@@ -1,5 +1,5 @@
 import {db} from "@/lib/database";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 
 export default withTenantCheck(async (req, res) => {
 
@@ -13,7 +13,7 @@ export default withTenantCheck(async (req, res) => {
     try {
         await db.query(
             `DELETE
-             FROM cici.questions
+             FROM question
              WHERE id = $1
                AND "tenantId" = $2`,
             [id, tenantId]

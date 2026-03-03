@@ -1,6 +1,6 @@
 import {addDayToDateString, validateDateRangeStrings} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
-import {withTenantCheck} from "@/lib/auth";
+import {withTenantCheck} from "@/lib/auth-server";
 
 export default withTenantCheck(async (req, res) => {
 
@@ -21,17 +21,16 @@ export default withTenantCheck(async (req, res) => {
         const tierSql = `
             WITH user_highest_tier AS (
                 SELECT
-                    "userId",
+                    m."userId",
                     CASE
-                        WHEN BOOL_OR("riskTier" = 'HIGH') THEN 'HIGH'
-                        WHEN BOOL_OR("riskTier" = 'LOW')  THEN 'LOW'
-                        ELSE NULL
+                        WHEN BOOL_OR(m."riskTier" = 'HIGH') THEN 'HIGH'
+                        WHEN BOOL_OR(m."riskTier" = 'LOW')  THEN 'LOW'
                     END as highest_tier
-                FROM cici.user_messages
-                WHERE "tenantId" = $1
-                  AND "sentAt" >= $2
-                  AND "sentAt" < $3
-                GROUP BY "userId"
+                FROM message AS m
+                WHERE m."tenantId" = $1
+                  AND m."createdAt" >= $2
+                  AND m."createdAt" < $3
+                GROUP BY m."userId"
             )
             SELECT
                 COUNT(*)::integer AS total_count,
@@ -45,18 +44,18 @@ export default withTenantCheck(async (req, res) => {
         // Get breakdown by risk category (counting messages)
         const categorySql = `
             SELECT
-                "riskTier",
-                "riskCategory",
+                m."riskTier",
+                m."riskCategory",
                    COUNT(*)::integer AS "count"
-            FROM cici.user_messages
-            WHERE "tenantId" = $1
-              AND "sentAt" >= $2
-              AND "sentAt" < $3
-              AND "riskTier" IS NOT NULL
-              AND "riskTier" != 'NONE'
-              AND "riskCategory" IS NOT NULL
-              AND "riskCategory" != 'NONE'
-            GROUP BY "riskTier", "riskCategory"
+            FROM message AS m
+            WHERE m."tenantId" = $1
+              AND m."createdAt" >= $2
+              AND m."createdAt" < $3
+              AND m."riskTier" IS NOT NULL
+              AND m."riskTier" != 'NONE'
+              AND m."riskCategory" IS NOT NULL
+              AND m."riskCategory" != 'NONE'
+            GROUP BY m."riskTier", m."riskCategory"
             ORDER BY "count" DESC
         `
 

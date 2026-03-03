@@ -17,7 +17,7 @@ const config: Knex.Config = {
             },
         }),
     },
-    searchPath: ['cici', 'public'],
+    searchPath: ['public'],
 }
 
 export const knex = knexFactory(config);

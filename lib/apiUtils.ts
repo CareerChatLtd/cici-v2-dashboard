@@ -1,27 +1,22 @@
-import {AgeBracket} from "@/lib/ages";
 import qs from "qs";
 import {NextApiRequest} from "next";
 
 export const makeApiRequestForDateRange = (
-    tenantId: string,
+    tenantId: number,
     endpoint: string,
     [start, end]: [Date, Date],
-    ageBracket: AgeBracket | null = null,
     additionalParams = {}
 ) => {
-    const {minAge = 0, maxAge = 999} = ageBracket || {}
     const params = {
         start: start.toISOString().substring(0, 10),
         end: end.toISOString().substring(0, 10),
-        minAge: String(minAge),
-        maxAge: String(maxAge),
         ...additionalParams
     }
 
     return makeApiRequestForTenant(tenantId, endpoint, params)
 }
 
-export const makeApiRequestForTenant = (tenantId: string, endpoint: string, additionalParams = {}) => {
+export const makeApiRequestForTenant = (tenantId: number, endpoint: string, additionalParams = {}) => {
     const params = qs.stringify({
         tenantId: tenantId ? String(tenantId) : '',
         ...additionalParams
@@ -36,6 +31,12 @@ export const makeApiRequestForTenant = (tenantId: string, endpoint: string, addi
         })
         .then(({data}) => data)
 }
+
+export const getQueryParam = (req: NextApiRequest, key: string): string | null => {
+    const val = req.query[key]
+    if (Array.isArray(val)) return val[0] ?? null
+    return val ?? null
+};
 
 /**
  * Next.js doesn't support objects in query parameters, so we need to parse the query string ourselves.

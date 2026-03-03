@@ -43,17 +43,61 @@ You can change settings and view logs in the [Apps Dashboard](https://cloud.digi
 
 1. Login to https://manage.auth0.com/
 2. Under User Management > Users, create a new user
-3. When editing that user, under app_metadata add the ID of the tenant that this user should have access to, eg:
+3. When editing that user, under app_metadata add the **slug** of the tenant that this user should have access to, eg:
    ```json
    {
      "tenantId": "derby"
    }
    ```
 
-For CareerChat staff the tenantId is "cici".
+For CareerChat staff the tenantId is "cici". 
+Yes, the field in Auth0 really should be called "slug", but this is a legacy issue.
 
-## Accessing other tenant's dashboards as an admin
 
-By default, you will see the dashboard for the "cici" tenant. To access another
-tenant's dashboard (eg. to see what a client would see), simply change the segment of the
-url from `tenant/cici` to `tenant/{tenantId}`.
+## Code Style
+
+### Function expressions over function declarations
+
+Prefer **function expressions** (const arrow functions) over **function declarations** (named functions):
+
+```typescript
+// Preferred
+const getUser = (id: string): User => {
+  return db.findUser(id);
+};
+
+// Avoid
+function getUser(id: string): User {
+  return db.findUser(id);
+}
+```
+
+This applies to all functions including React components, utility functions, and handlers.
+
+### Named exports over default exports
+
+Use **named exports** instead of **default exports**:
+
+```typescript
+// Preferred
+export const MyComponent = () => {
+  ...
+};
+
+// Avoid
+export default MyComponent;
+```
+
+Named exports enforce consistent import names across the codebase, improve refactoring support, and make tree-shaking more predictable.
+
+### Destructuring over dot access
+
+Prefer **destructuring** when extracting properties from objects:
+
+```typescript
+// Preferred
+const {userId, userText} = currentMessage;
+
+// Avoid
+const userId = currentMessage.userId;
+const userText = currentMessage.userText;

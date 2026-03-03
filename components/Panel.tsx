@@ -41,7 +41,7 @@ export const Panel = ({
                           maxDateRangeInDays,
                           onlyFilteredByDate
                       }: PanelProps) => {
-    const {tenantId, dateRange, ageBracket, customQuestions, filterCount} = useReportContext();
+    const {tenantId, dateRange, customQuestions, filterCount} = useReportContext();
     const [data, setData] = useState(null)
 
     const [start, end] = dateRange
@@ -70,9 +70,9 @@ export const Panel = ({
                 .map(([k, v]) => [`_${k}`, v])),
         };
 
-        makeApiRequestForDateRange(tenantId, actualEndpoint, dateRange, ageBracket, additionalParams).then(setData)
+        makeApiRequestForDateRange(tenantId, actualEndpoint, dateRange, additionalParams).then(setData)
 
-    }, [customQuestions, tenantId, dateRange, ageBracket, endpoint, dateRangeTooBig])
+    }, [customQuestions, tenantId, dateRange, endpoint, dateRangeTooBig])
 
     const startDownload = () => {
         const {columns, data: csvData} = asCsv(data);

@@ -1,27 +1,24 @@
-// Be sure to keep this in sync with the question_types table in the database
-export const questionTypes = [
+export type QuestionType = "text" | "yesNo" | "singleChoice" | "multipleChoice"
+
+export const questionTypes: Array<{ slug: QuestionType, name: string, description: string }> = [
     {
-        id: 1,
+        slug: 'text',
         name: 'Text',
         description: 'Open-ended questions allowing free text responses'
     },
     {
-        id: 2,
+        slug: 'yesNo',
         name: 'Yes/No',
         description: 'Questions that require a yes or no response'
     },
     {
-        id: 3,
+        slug: 'singleChoice',
         name: 'Single Choice',
         description: 'Preset options where only one can be chosen'
     },
     {
-        id: 4,
+        slug: 'multipleChoice',
         name: 'Multiple Choice',
         description: 'Preset options where multiple can be chosen'
     }
-] as const
-
-export type QuestionType = typeof questionTypes[number]
-export type QuestionTypeId = QuestionType['id']
-export type QuestionTypeName = QuestionType['name']
+]

@@ -1,9 +1,9 @@
-import {withAdminCheck} from "@/lib/auth";
+import {withAdminCheck} from "@/lib/auth-server";
 import {createQuestionValidator} from "@/lib/questions";
 import {NextApiRequest, NextApiResponse} from "next/types";
 import {knex} from "@/lib/knex";
 import {Question, QuestionOption} from "@/lib/types";
-import {QuestionType, QuestionTypeId} from "@/lib/questionTypes";
+import {questionTypes, QuestionType} from "@/lib/questionTypes";
 
 interface OptionRequest {
     id: number | null;
@@ -13,19 +13,16 @@ interface OptionRequest {
 
 interface QuestionRequest {
     id: number | null;
-    tenantId: string;
+    tenantId: number;
     name: string;
     text: string;
-    conversationStage: 'start' | 'handover' | 'after_topic';
+    conversationStage: 'start' | 'handover';
     includeInHandover: boolean;
-    typeId: QuestionTypeId;
+    type: QuestionType;
     options: OptionRequest[];
-    topics: string[];
 }
 
 export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) => {
-
-    const questionTypes = await knex<QuestionType>('cici.question_types')
 
     const rawData = JSON.parse(req.body)
 
@@ -59,21 +56,20 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
         return res.status(400).json({errors})
     }
 
-    // Remove options and topics fields as these are saved in separate tables
-    const {options: optionsData = [], topics: topicsData = [], ...questionData} = validated as QuestionRequest
-
+    // Remove options field as these are saved in a separate table
+    const {options: optionsData = [], ...questionData} = validated as QuestionRequest
 
     try {
         const {id, ...otherData} = questionData
 
         // Save question data to database
         const question = id
-            ? await knex<Question>('cici.questions')
+            ? await knex<Question>('question')
                 .where('id', id)
                 .update(otherData)
                 .returning('*')
                 .then(r => r[0])
-            : await knex<Question>('cici.questions')
+            : await knex<Question>('question')
                 .insert(otherData)
                 .returning('*')
                 .then(r => r[0])
@@ -81,10 +77,9 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
         question.options = []
 
         // Save options data to database
+        const choiceTypes: QuestionType[] = ['singleChoice', 'multipleChoice']
 
-        const choiceTypeIds = questionTypes.filter(t => ['Single Choice', 'Multiple Choice'].includes(t.name)).map(t => t.id)
-
-        if (choiceTypeIds.includes(questionData.typeId) && optionsData.length > 0) {
+        if (choiceTypes.includes(questionData.type) && optionsData.length > 0) {
 
             const optionsWithQuestionId = optionsData.map(option => ({...option, questionId}))
             const optionsWithId = optionsWithQuestionId.filter((row) => row.id !== null);
@@ -94,7 +89,7 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
 
             // Delete any existing options for this question that are no longer in the request
             const optionIds = optionsWithId.map(o => o.id)
-            await knex('cici.question_options')
+            await knex('questionOption')
                 .where('questionId', questionId)
                 .whereNotIn('id', optionIds)
                 .delete()
@@ -103,7 +98,7 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
                 // Update existing options
                 await Promise.all(optionsWithId.map(async (option) => {
                     const {id, text} = option
-                    return knex('cici.question_options')
+                    return knex('questionOption')
                         .where('id', id)
                         .where('questionId', questionId)
                         .update({text})
@@ -112,31 +107,14 @@ export default withAdminCheck(async (req: NextApiRequest, res: NextApiResponse) 
 
             if (optionsWithoutId.length > 0) {
                 // Insert new options
-                await knex('cici.question_options').insert(optionsWithoutId)
+                await knex('questionOption').insert(optionsWithoutId)
             }
 
             // Fetch all options for this question
-            question.options = await knex<QuestionOption>('cici.question_options')
+            question.options = await knex<QuestionOption>('questionOption')
                 .where('questionId', questionId)
                 .select('id', 'questionId', 'text')
                 .orderBy('id');
-        }
-
-        question.topics = topicsData;
-
-        // Delete any existing topics
-        await knex('cici.question_topics').where('questionId', questionId).delete()
-
-        // Insert the new topics
-        if (topicsData.length > 0) {
-            // Add questionId FK to each topic
-            await Promise.all(topicsData.map(async (topicId) => {
-                    const topic = {questionId, topicId}
-                    return knex('cici.question_topics')
-                        .insert(topic)
-                        .returning('*')
-                })
-            )
         }
 
         return res.status(200).json({data: question});

@@ -5,7 +5,7 @@ import {ReactNode, useState} from "react";
 import {isMultiTenantUser, isUserAdmin} from "@/lib/auth0";
 import {useRouter} from "next/router";
 import {useUser} from "@auth0/nextjs-auth0/client";
-import {getShortLinkForId} from "@/lib/shortLinks";
+import {getBotUrl} from "@/lib/shortLinks";
 import {Tenant} from "@/lib/types";
 
 interface HeaderProps {
@@ -155,7 +155,7 @@ export default function Header({children = null, tenant = null}: HeaderProps) {
                             <div className="shrink truncate ml-2">
                                 <a
                                     className="h-8 px-2 text-xs text-white hover:text-white flex items-center hover:bg-white/10"
-                                    href={getShortLinkForId(tenant.id)}
+                                    href={getBotUrl(tenant.slug)}
                                     target="_blank"
                                     title="Open chat bot"
                                 >

@@ -4,26 +4,22 @@ import Head from "next/head";
 import Header from "@/components/Header";
 import ScreenHeader from "@/components/ScreenHeader";
 import {ItemPredicate, ItemRenderer, Select} from "@blueprintjs/select";
-import { DateRangePicker } from "@blueprintjs/datetime";
+import {DateRangePicker} from "@blueprintjs/datetime";
 import {DateTime} from "luxon";
 import {friendlyDateRange} from "@/lib/dateUtils";
 import {makeApiRequestForDateRange} from "@/lib/apiUtils";
 import {withAdminUser} from "@/lib/auth";
 import Custom500 from "./500";
+import {FeedbackResponse} from "./api/feedback";
 
 // Hide the blue outline when using the mouse that looks a bit weird on things like popover
 FocusStyleManager.onlyShowFocusOnTabs();
 
 interface Tenant {
-    id: string
+    id: number
     name: string
 }
 
-interface Feedback {
-    averageScore: number;
-    numberOfRatings: number;
-    responses: Array<{ message: string, rating: number }>;
-}
 
 const renderTenant: ItemRenderer<Tenant> = (tenant, {handleClick, handleFocus, modifiers}) => {
     if (!modifiers.matchesPredicate) {
@@ -58,7 +54,7 @@ const Feedback = () => {
     const [tenant, setTenant] = useState<Tenant | null>(null)
     const [tenants, setTenants] = useState([])
     const [dateRange, setDateRange] = useState<[Date, Date]>([defaultStart, defaultEnd])
-    const [feedback, setFeedback] = useState<Feedback | null>(null)
+    const [feedback, setFeedback] = useState<FeedbackResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -154,17 +150,18 @@ const Feedback = () => {
                                 intent="danger"
                                 icon="delete"
                                 title="Delete option"
-                                small
+                                size="small"
                                 className="mx-4"
-                                minimal
+                                variant="minimal"
                                 onClick={() => setTenant(null)}
                             />}
                         </div>
 
                         {feedback && <>
                             <Card interactive={true} elevation={Elevation.TWO} className='mt-5'>
-                                <h2 className="text-xl font-bold">Average score: {feedback.averageScore}</h2>
                                 <p className='mt-2'>Number of ratings: {feedback.numberOfRatings}</p>
+                                <p className='mt-2'>Upvotes: {feedback.upCount}</p>
+                                <p className='mt-2'>Downvotes: {feedback.downCount}</p>
                             </Card>
 
 
@@ -176,10 +173,10 @@ const Feedback = () => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {feedback.responses.map(({message, rating}, i) => (
+                                {feedback.responses.map(({reason, details}, i) => (
                                     <tr key={i} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td className="px-4 py-1 text-right">{rating}</td>
-                                        <td className="px-4 py-1">{message}</td>
+                                        <td className="px-4 py-1">{reason}</td>
+                                        <td className="px-4 py-1">{details}</td>
                                     </tr>
                                 ))}
                                 </tbody>
