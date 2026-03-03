@@ -1,4 +1,4 @@
-import {validateDateRangeStrings, validateMonthString} from "@/lib/dateUtils";
+import {addDayToDateString, validateDateRangeStrings, validateMonthString} from "@/lib/dateUtils";
 import {db} from "@/lib/database";
 import {withTenantCheck} from "@/lib/auth-server";
 
@@ -75,7 +75,7 @@ export default withTenantCheck(async (req, res) => {
             return res.status(400).json({error})
         }
         start = startOn
-        end = endOn
+        end = addDayToDateString(String(endOn))
     }
 
     try {
