@@ -73,7 +73,7 @@ const CourseDataStage2 = () => {
                                 type="submit"
                                 intent="primary"
                                 text="Load data"
-                                large
+                                size="large"
                                 className="mt-4"
                                 onClick={begin}
                             />
