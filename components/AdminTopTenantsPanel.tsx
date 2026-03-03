@@ -7,13 +7,15 @@ interface Props {
 }
 
 interface TenantData {
-    tenantSlug: string;
-    tenantName: string;
+    id: number;
+    name: string;
     activeUsers: number;
 }
 
-const Loading = () => <div className="h-full min-h-[120px] flex items-center justify-center text-gray-500"><Spinner/></div>
-const NoData = () => <div className="h-full min-h-[120px] flex items-center justify-center text-gray-400">No data for this period</div>
+const Loading = () => <div className="h-full min-h-[120px] flex items-center justify-center text-gray-500"><Spinner/>
+</div>
+const NoData = () => <div className="h-full min-h-[120px] flex items-center justify-center text-gray-400">No data for
+    this period</div>
 
 export const AdminTopTenantsPanel = ({dateRange}: Props) => {
     const [data, setData] = useState<TenantData[] | null>(null);
@@ -63,8 +65,8 @@ export const AdminTopTenantsPanel = ({dateRange}: Props) => {
                             </thead>
                             <tbody>
                             {data.map(tenant => (
-                                <tr key={tenant.tenantSlug} className="border-b border-gray-300 hover:bg-gray-50">
-                                    <td className="px-4 py-1 text-left">{tenant.tenantName || tenant.tenantSlug}</td>
+                                <tr key={tenant.id} className="border-b border-gray-300 hover:bg-gray-50">
+                                    <td className="px-4 py-1 text-left">{tenant.name}</td>
                                     <td className="px-4 py-1 text-right">{tenant.activeUsers}</td>
                                 </tr>
                             ))}
