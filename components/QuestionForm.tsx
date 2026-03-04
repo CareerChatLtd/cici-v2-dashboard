@@ -47,9 +47,11 @@ export const QuestionForm = forwardRef(
             options: [{...emptyOption}],
             conversationStage: 'start',
         }
-        // Be sure to remove internalRef if it has come from an existing question, as we never want this to be edited via the UI
-        if ('internalRef' in initialState) {
-            delete initialState.internalRef
+        // Remove server-only fields that should never be sent back to the API
+        for (const key of ['internalRef', 'createdAt', 'updatedAt']) {
+            if (key in initialState) {
+                delete initialState[key]
+            }
         }
 
         const [question, setQuestion] = useState(initialState)
