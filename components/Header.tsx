@@ -108,24 +108,9 @@ export default function Header({children = null, tenant = null}: HeaderProps) {
                                         {isUserAdmin(user) && (
                                             <>
                                                 <MenuItem
-                                                    icon="comparison"
-                                                    text="Tenants"
-                                                    onClick={() => router.push(`/tenants`)}
-                                                />
-                                                <MenuItem
-                                                    icon="manual"
-                                                    text="Knowledge items"
-                                                    onClick={() => router.push(`/knowledge-items`)}
-                                                />
-                                                <MenuItem
-                                                    icon="media"
-                                                    text="Image items"
-                                                    onClick={() => router.push(`/image-items`)}
-                                                />
-                                                <MenuItem
-                                                    icon="learning"
-                                                    text="Course data"
-                                                    onClick={() => router.push(`/course-data`)}
+                                                    icon="cog"
+                                                    text="Manage"
+                                                    onClick={() => router.push(`/manage`)}
                                                 />
                                                 <MenuItem
                                                     icon="chart"

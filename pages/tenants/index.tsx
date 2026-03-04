@@ -91,7 +91,7 @@ const ListTenants = () => {
             <div className="mx-auto max-w-6xl px-4 mt-4 pb-10">
 
                 <ScreenHeader
-                    backLink="/"
+                    backLink="/manage"
                     title="Manage tenants"
                     rightSlot={<AnchorButton
                         type="submit"

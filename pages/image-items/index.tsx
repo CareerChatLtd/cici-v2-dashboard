@@ -78,7 +78,7 @@ const ListImageItems = () => {
             <div className="mx-auto max-w-6xl px-4 mt-4 pb-10">
 
                 <ScreenHeader
-                    backLink="/"
+                    backLink="/manage"
                     title="Image items"
                     rightSlot={<AnchorButton
                         type="submit"
