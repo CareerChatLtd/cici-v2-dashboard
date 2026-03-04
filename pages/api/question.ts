@@ -21,7 +21,7 @@ export default withTenantCheck(async (req, res) => {
                                               FROM "questionOption"
                                               WHERE "questionId" = $1
                                               ORDER BY id`, [question.id])
-    question.options = optionsResults.rows
+    question.options = optionsResults.rows.map(row => ({...row, id: Number(row.id)}))
 
     return res.status(200).json({data: question})
 })
