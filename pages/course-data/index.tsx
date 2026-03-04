@@ -65,7 +65,7 @@ const CourseDataStage1 = () => {
                         {updated
                             ?
                             <div className="my-4">
-                                <p><Link href={`/course-data/stage-2.tsx`}>Stage 2: Add course data to database</Link></p>
+                                <p><Link href={`/course-data/stage-2`}>Stage 2: Add course data to database</Link></p>
                                 <p className="mt-4 text-xs"><Link href={`/`}>Cancel and return to dashboard</Link></p>
                             </div>
                             :
