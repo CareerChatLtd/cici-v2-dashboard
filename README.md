@@ -28,11 +28,9 @@ actual port number.
 
 ### Database Connection
 
-This dashboard requires access to a PostgreSQL Botpress database.
+This dashboard requires access to a PostgreSQL database.
 As this app only reads data, you may want to connect to the production CiCi bot database.
-1. Download the CA certificate from the [DigitalOcean Database Dashboard](https://cloud.digitalocean.com/databases/cici-bot/pools)
-2. Convert this to a one-liner (replace line breaks with `\n`) and add as the `DB_CA_CERT` value in your `.env.local` file
-3. Copy the PostgreSQL connection string from that same dashboard, and paste as the `DB_CONNECTION_STRING` value in your `.env.local` file
+1. Copy the PostgreSQL connection string from the [DigitalOcean Database Dashboard](https://cloud.digitalocean.com/databases/cici-bot/pools), and paste as the `DB_CONNECTION_STRING` value in your `.env.local` file
 
 ## Deployment
 

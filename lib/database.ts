@@ -2,7 +2,6 @@ import {Pool, types} from 'pg'
 
 const {
     DB_CONNECTION_STRING: connectionString,
-    DB_CA_CERT: certificate,
 } = process.env
 
 
@@ -11,12 +10,9 @@ types.setTypeParser(1082, (val) => val); // Keeps dates as 'YYYY-MM-DD' strings
 
 const db = new Pool({
     connectionString,
-    ...(certificate && {
-        ssl: {
-            rejectUnauthorized: false,
-            ca: certificate,
-        },
-    }),
+    ssl: {
+        rejectUnauthorized: false,
+    },
 })
 
 db.on('connect', async client => {
