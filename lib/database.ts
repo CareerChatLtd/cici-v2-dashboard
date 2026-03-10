@@ -10,9 +10,7 @@ types.setTypeParser(1082, (val) => val); // Keeps dates as 'YYYY-MM-DD' strings
 
 const db = new Pool({
     connectionString,
-    ssl: {
-        rejectUnauthorized: false,
-    },
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 
 db.on('connect', async client => {
