@@ -7,7 +7,7 @@ import {Tenant} from "@/lib/types";
 import {getBotApiUrl} from "@/lib/botUrls";
 
 interface FrontMatter {
-    nation: string;
+    country: string;
     age: string;
 }
 
@@ -29,7 +29,7 @@ function parseFrontMatter(text: string): { frontMatter: FrontMatter; content: st
     const match = text.match(frontMatterRegex);
 
     if (!match) {
-        return { frontMatter: { nation: '', age: '' }, content: text };
+        return { frontMatter: { country: '', age: '' }, content: text };
     }
 
     const frontMatterText = match[1];
@@ -45,7 +45,7 @@ function parseFrontMatter(text: string): { frontMatter: FrontMatter; content: st
 
     return {
         frontMatter: {
-            nation: frontMatter.nation || '',
+            country: frontMatter.country || '',
             age: frontMatter.age || ''
         },
         content
@@ -165,7 +165,7 @@ function HighRiskSafeguardingResponses({tenant}: Props) {
                         {documents.map((doc, index) => (
                         <div key={index}>
                             <h3 className="text-xl font-bold text-gray-900 mb-4">
-                                {doc.frontMatter.nation} - {formatAge(doc.frontMatter.age)}
+                                {doc.frontMatter.country} - {formatAge(doc.frontMatter.age)}
                             </h3>
 
                             <div
