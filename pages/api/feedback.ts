@@ -11,11 +11,19 @@ interface MessageVote {
     details: string;
 }
 
+interface GeneralFeedback {
+    id: number;
+    userId: string;
+    text: string;
+    createdAt: string;
+}
+
 export interface FeedbackResponse {
     upCount: number;
     downCount: number;
     numberOfRatings: number;
     responses: MessageVote[];
+    generalFeedback: GeneralFeedback[];
 }
 
 const getFeedback = (start, end, tenantId: number | null = null) => {
@@ -50,6 +58,21 @@ const getRatings = (start, end, tenantId: number | null = null) => {
     return db.query(sql, params)
 }
 
+const getGeneralFeedback = (start, end, tenantId: number | null = null) => {
+    let sql = `
+        SELECT f."id", f."userId", f."text", f."createdAt"
+        FROM "feedback" AS f
+        WHERE f."createdAt" >= $1
+          AND f."createdAt" < $2
+    `
+    const params: unknown[] = [start, end]
+    if (tenantId) {
+        sql += ` AND f."tenantId" = $3`
+        params.push(tenantId)
+    }
+    sql += ` ORDER BY f."createdAt" DESC`
+    return db.query(sql, params)
+}
 
 export default withTenantCheck(async (req, res) => {
 
@@ -82,6 +105,7 @@ export default withTenantCheck(async (req, res) => {
     try {
         const [{upCount, downCount, count}] = (await getRatings(start, end, tenantId)).rows
         const messages = (await getFeedback(start, end, tenantId)).rows as MessageVote[]
+        const general = (await getGeneralFeedback(start, end, tenantId)).rows as GeneralFeedback[]
 
         const data: FeedbackResponse = {
             upCount: parseInt(upCount),
@@ -92,6 +116,12 @@ export default withTenantCheck(async (req, res) => {
                 messageId,
                 reason: reason?.trim() ?? null,
                 details: details?.trim() ?? null,
+            })),
+            generalFeedback: general.map(({id, userId, text, createdAt}) => ({
+                id,
+                userId,
+                text: text?.trim() ?? null,
+                createdAt,
             }))
         }
 

@@ -100,9 +100,9 @@ const Feedback = () => {
 
             <Header tenant={tenant}>
                 <div className="flex justify-end">
-                    <div className="flex-grow-0 px-2 hidden sm:block">
+                    <div className="grow-0 px-2 hidden sm:block">
                     </div>
-                    <div className="flex-grow-0 px-2">
+                    <div className="grow-0 px-2">
                         <Popover
                             content={
                                 <DateRangePicker
@@ -179,27 +179,54 @@ const Feedback = () => {
                                 <tbody>
                                 {feedback.responses
                                     .map(({messageId, vote, reason, details}, i) => (
-                                    <tr key={i} className="border-b border-gray-300 hover:bg-gray-50">
-                                        <td className="px-4 py-1">
-                                            <Link href={`/messages/${messageId}`} className="text-blue-600 hover:underline">
-                                                {messageId}
-                                            </Link>
-                                        </td>
-                                        <td className="px-4 py-1">
-                                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                vote === 'up'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
-                                            }`}>
+                                        <tr key={i} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td className="px-4 py-1">
+                                                <Link href={`/messages/${messageId}`}
+                                                      className="text-blue-600 hover:underline">
+                                                    {messageId}
+                                                </Link>
+                                            </td>
+                                            <td className="px-4 py-1">
+                                            <span
+                                                className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    vote === 'up'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
                                                 {vote === 'up' ? 'Up' : 'Down'}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-1">{reason}</td>
-                                        <td className="px-4 py-1">{details}</td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                            <td className="px-4 py-1">{reason}</td>
+                                            <td className="px-4 py-1">{details}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
+
+                            <h3 className="mt-6 mb-2 text-lg font-semibold">General Feedback</h3>
+                            {feedback.generalFeedback.length === 0
+                                ? <p className="text-gray-500">No general feedback in this period.</p>
+                                : <table className="w-full">
+                                    <thead>
+                                    <tr className="border-b border-gray-300 bg-gray-300">
+                                        <th className="px-4 py-1 text-left">Date</th>
+                                        <th className="px-4 py-1 text-left">User</th>
+                                        <th className="px-4 py-1 text-left">Feedback</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {feedback.generalFeedback.map(({id, userId, text, createdAt}) => (
+                                        <tr key={id} className="border-b border-gray-300 hover:bg-gray-50">
+                                            <td className="px-4 py-1 whitespace-nowrap">
+                                                {new Date(createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-4 py-1">{userId}</td>
+                                            <td className="px-4 py-1">{text}</td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            }
                         </>
                         }
                     </div>
